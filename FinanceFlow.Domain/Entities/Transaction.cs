@@ -16,5 +16,6 @@ namespace FinanceFlow.Domain.Entities
         public string UserId { get; set; } = string.Empty;
         public User User { get; set; } = null!;
         public int AtmMachineId { get; set; }
+        public AtmMachine? atmMachine { get; set; }
     }
 }

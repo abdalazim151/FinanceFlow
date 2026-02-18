@@ -80,7 +80,7 @@
         "projectName": "FinanceFlow.Domain",
         "projectPath": "C:\\Users\\lenovo\\source\\repos\\FinanceFlow\\FinanceFlow.Domain\\FinanceFlow.Domain.csproj",
         "packagesPath": "C:\\Users\\lenovo\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\lenovo\\source\\repos\\FinanceFlow\\FinanceFlow.Domain\\obj\\",
+        "outputPath": "C:\\Users\\lenovo\\Source\\Repos\\FinanceFlow\\FinanceFlow.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -37,7 +37,7 @@
       "projectName": "FinanceFlow.Application",
       "projectPath": "C:\\Users\\lenovo\\source\\repos\\FinanceFlow\\FinanceFlow.Application\\FinanceFlow.Application.csproj",
       "packagesPath": "C:\\Users\\lenovo\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\lenovo\\source\\repos\\FinanceFlow\\FinanceFlow.Application\\obj\\",
+      "outputPath": "C:\\Users\\lenovo\\Source\\Repos\\FinanceFlow\\FinanceFlow.Application\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
