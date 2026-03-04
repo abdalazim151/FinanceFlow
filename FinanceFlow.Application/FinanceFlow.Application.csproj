@@ -10,4 +10,15 @@
     <ProjectReference Include="..\FinanceFlow.Domain\FinanceFlow.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.24" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\ImplInterfaces\" />
+    <Folder Include="Features\Authentication\Queries\" />
+    <Folder Include="Features\Operation\Queries\" />
+  </ItemGroup>
+
 </Project>

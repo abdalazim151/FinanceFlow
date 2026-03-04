@@ -9,6 +9,8 @@ namespace FinanceFlow.Domain.Enums
     public enum TransactionType
     {
         Deposit = 1,   
-        Withdrawal = 2
+        Withdrawal = 2,
+        Transfer = 3,
+        Feed= 4
     }
 }

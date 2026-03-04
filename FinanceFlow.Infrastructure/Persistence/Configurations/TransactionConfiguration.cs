@@ -18,9 +18,7 @@ namespace FinanceFlow.Infrastructure.Persistence.Configurations
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
-            builder.HasOne(u=>u.User)
-                .WithMany() 
-                .OnDelete(DeleteBehavior.NoAction);
+           
             builder.HasOne(t => t.atmMachine).WithMany(a => a.transactions)
                 .HasForeignKey(a =>a.AtmMachineId)
                 .OnDelete(DeleteBehavior.NoAction);

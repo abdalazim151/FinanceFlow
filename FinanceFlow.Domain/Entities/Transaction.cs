@@ -13,8 +13,10 @@ namespace FinanceFlow.Domain.Entities
         public int Amount { get; set; }
         public TransactionType transactionType { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public string UserId { get; set; } = string.Empty;
-        public User User { get; set; } = null!;
+        public string User1Id { get; set; } = string.Empty;
+        public User? User1 { get; set; } = null!;
+        public string User2Id { get; set; } = string.Empty;
+        public User? User2 { get; set; } = null!;
         public int AtmMachineId { get; set; }
         public AtmMachine? atmMachine { get; set; }
     }
