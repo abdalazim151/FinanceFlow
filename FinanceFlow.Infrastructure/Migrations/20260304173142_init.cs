@@ -64,7 +64,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DomainUsers",
+                name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -74,7 +74,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DomainUsers", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -94,8 +94,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -115,8 +114,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                         name: "FK_AspNetUserClaims_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -135,8 +133,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                         name: "FK_AspNetUserLogins_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -153,14 +150,12 @@ namespace FinanceFlow.Infrastructure.Migrations
                         name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_AspNetUserRoles_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -179,8 +174,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                         name: "FK_AspNetUserTokens_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -200,8 +194,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                         name: "FK_AtmInventory_AtmMachines_AtmMachineId",
                         column: x => x.AtmMachineId,
                         principalTable: "AtmMachines",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -213,7 +206,8 @@ namespace FinanceFlow.Infrastructure.Migrations
                     Amount = table.Column<int>(type: "int", nullable: false),
                     transactionType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    User1Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    User2Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AtmMachineId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -225,9 +219,14 @@ namespace FinanceFlow.Infrastructure.Migrations
                         principalTable: "AtmMachines",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Transactions_DomainUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "DomainUsers",
+                        name: "FK_Transactions_Users_User1Id",
+                        column: x => x.User1Id,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Transactions_Users_User2Id",
+                        column: x => x.User2Id,
+                        principalTable: "Users",
                         principalColumn: "Id");
                 });
 
@@ -281,9 +280,14 @@ namespace FinanceFlow.Infrastructure.Migrations
                 column: "AtmMachineId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_UserId",
+                name: "IX_Transactions_User1Id",
                 table: "Transactions",
-                column: "UserId");
+                column: "User1Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_User2Id",
+                table: "Transactions",
+                column: "User2Id");
         }
 
         /// <inheritdoc />
@@ -320,7 +324,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                 name: "AtmMachines");
 
             migrationBuilder.DropTable(
-                name: "DomainUsers");
+                name: "Users");
         }
     }
 }

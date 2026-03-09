@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "W/7f0XqNae0=",
+  "dgSpecHash": "PEc1+fds2yM=",
   "success": true,
   "projectFilePath": "C:\\Users\\lenovo\\source\\repos\\FinanceFlow\\FinanceFlow.Application\\FinanceFlow.Application.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\lenovo\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
     "C:\\Users\\lenovo\\.nuget\\packages\\mediatr\\14.0.0\\mediatr.14.0.0.nupkg.sha512",
     "C:\\Users\\lenovo\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",
     "C:\\Users\\lenovo\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\8.0.24\\microsoft.aspnetcore.cryptography.internal.8.0.24.nupkg.sha512",

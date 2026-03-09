@@ -5,10 +5,17 @@ using FinanceFlow.Application.Features.Authentication.Commands;
 using FinanceFlow.Infrastructure;
 using FinanceFlow.Infrastructure.Identity;
 using FinanceFlow.Infrastructure.Persistence;
+using FinanceFlow.API.Middlewares;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using FinanceFlow.Application.Common.Behaviours;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace FinanceFlow.API
 {
@@ -20,7 +27,8 @@ namespace FinanceFlow.API
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddFluentValidation();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -40,10 +48,35 @@ namespace FinanceFlow.API
             builder.Services.AddScoped<IWithdrawService, WithdrawService>();
             builder.Services.AddScoped<ITransferService, TransferService>();
             builder.Services.AddScoped<IAtmService, AtmService>();
+
+            var jwtSettings = builder.Configuration.GetSection("JWT");
+            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings["ValidIssuer"],
+                    ValidAudience = jwtSettings["ValidAudience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                };
+            });
             builder.Services.AddMediatR(cfg =>
             {
-                cfg.RegisterServicesFromAssembly((typeof(LoginCommand).Assembly));
+                cfg.RegisterServicesFromAssembly(typeof(LoginCommand).Assembly);
+                cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             });
+
+            builder.Services.AddValidatorsFromAssemblyContaining<LoginCommandValidator>();
             var app = builder.Build();
             var scope = app.Services.CreateScope();
             var services = scope.ServiceProvider;
@@ -61,11 +94,14 @@ namespace FinanceFlow.API
                 logger.LogError(ex, "an error occured during applying db");
             }
 
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
             app.Run();

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260218124740_init")]
-    partial class init
+    [Migration("20260304173348_initv2")]
+    partial class initv2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -78,14 +78,16 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.Property<int>("Amount")
                         .HasColumnType("int");
 
-                    b.Property<int>("AtmMachineId")
+                    b.Property<int?>("AtmMachineId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
+                    b.Property<string>("User1Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("User2Id")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("transactionType")
@@ -97,7 +99,9 @@ namespace FinanceFlow.Infrastructure.Migrations
 
                     b.HasIndex("AtmMachineId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("User1Id");
+
+                    b.HasIndex("User2Id");
 
                     b.ToTable("Transactions");
                 });
@@ -123,7 +127,7 @@ namespace FinanceFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DomainUsers");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("FinanceFlow.Infrastructure.Identity.ApplicationUser", b =>
@@ -329,7 +333,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.HasOne("FinanceFlow.Domain.Entities.AtmMachine", "AtmMachine")
                         .WithMany("Inventories")
                         .HasForeignKey("AtmMachineId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("AtmMachine");
@@ -340,16 +344,21 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.HasOne("FinanceFlow.Domain.Entities.AtmMachine", "atmMachine")
                         .WithMany("transactions")
                         .HasForeignKey("AtmMachineId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("FinanceFlow.Domain.Entities.User", "User")
+                    b.HasOne("FinanceFlow.Domain.Entities.User", "User1")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .HasForeignKey("User1Id")
+                        .OnDelete(DeleteBehavior.NoAction);
 
-                    b.Navigation("User");
+                    b.HasOne("FinanceFlow.Domain.Entities.User", "User2")
+                        .WithMany()
+                        .HasForeignKey("User2Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("User1");
+
+                    b.Navigation("User2");
 
                     b.Navigation("atmMachine");
                 });
@@ -359,7 +368,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -368,7 +377,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.HasOne("FinanceFlow.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -377,7 +386,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.HasOne("FinanceFlow.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -386,13 +395,13 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("FinanceFlow.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -401,7 +410,7 @@ namespace FinanceFlow.Infrastructure.Migrations
                     b.HasOne("FinanceFlow.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 

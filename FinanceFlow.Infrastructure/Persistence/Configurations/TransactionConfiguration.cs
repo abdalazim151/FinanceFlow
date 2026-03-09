@@ -1,4 +1,4 @@
-﻿using FinanceFlow.Domain.Entities;
+using FinanceFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -18,7 +18,17 @@ namespace FinanceFlow.Infrastructure.Persistence.Configurations
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
-           
+
+            builder.HasOne(t => t.User1)
+                .WithMany()
+                .HasForeignKey(t => t.User1Id)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(t => t.User2)
+                .WithMany()
+                .HasForeignKey(t => t.User2Id)
+                .OnDelete(DeleteBehavior.NoAction);
+
             builder.HasOne(t => t.atmMachine).WithMany(a => a.transactions)
                 .HasForeignKey(a =>a.AtmMachineId)
                 .OnDelete(DeleteBehavior.NoAction);

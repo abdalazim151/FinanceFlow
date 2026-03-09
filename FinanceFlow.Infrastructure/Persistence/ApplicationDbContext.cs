@@ -1,7 +1,8 @@
-﻿using FinanceFlow.Domain.Entities;
+using FinanceFlow.Domain.Entities;
 using FinanceFlow.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,13 @@ namespace FinanceFlow.Infrastructure.Persistence
         {
             base.OnModelCreating(builder);
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            foreach (var foreignKey in builder.Model.GetEntityTypes()
+                .SelectMany(e => e.GetForeignKeys())
+                .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade))
+            {
+                foreignKey.DeleteBehavior = DeleteBehavior.NoAction;
+            }
         }
     }
 }

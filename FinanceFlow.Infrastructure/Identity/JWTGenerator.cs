@@ -28,7 +28,7 @@ namespace FinanceFlow.Infrastructure.Identity
             var Token = new JwtSecurityToken(
                  issuer: configuration["JWT:ValidIssuer"],
                  audience: configuration["JWT:ValidAudience"],
-                 expires: DateTime.Now.AddMinutes(double.Parse(configuration["JWT:DuratoinInDays"])),
+                 expires: DateTime.Now.AddDays(double.Parse(configuration["JWT:DuratoinInDays"])),
                  claims: AuthClaim,
                  signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha256Signature)
                 );

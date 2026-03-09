@@ -1,13 +1,16 @@
+using System.Security.Claims;
 using FinanceFlow.Application.Common.DTOs;
 using FinanceFlow.Application.Features.Operation.Command;
 using FinanceFlow.Application.Features.Operation.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinanceFlow.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OperationController : ControllerBase
     {
         private readonly IMediator mediator;
@@ -20,7 +23,15 @@ namespace FinanceFlow.API.Controllers
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposite([FromBody] DepositeCommand command)
         {
-            var result = await mediator.Send(command);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var enrichedCommand = command with { AccountId = userId };
+
+            var result = await mediator.Send(enrichedCommand);
             if (!result)
             {
                 return BadRequest("Deposit failed.");
@@ -32,7 +43,15 @@ namespace FinanceFlow.API.Controllers
         [HttpPost("withdraw")]
         public async Task<IActionResult> Withdraw([FromBody] WithdrawCommand command)
         {
-            var result = await mediator.Send(command);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var enrichedCommand = command with { AccountId = userId };
+
+            var result = await mediator.Send(enrichedCommand);
             if (!result)
             {
                 return BadRequest("Withdraw failed.");
@@ -44,7 +63,15 @@ namespace FinanceFlow.API.Controllers
         [HttpPost("transfer")]
         public async Task<IActionResult> Transfer([FromBody] TransferCommand command)
         {
-            var result = await mediator.Send(command);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var enrichedCommand = command with { FromAccountId = userId };
+
+            var result = await mediator.Send(enrichedCommand);
             if (!result)
             {
                 return BadRequest("Transfer failed.");
@@ -65,10 +92,16 @@ namespace FinanceFlow.API.Controllers
             return Ok(true);
         }
 
-        [HttpGet("users/{accountId}/balance")]
-        public async Task<ActionResult<decimal>> GetUserBalance(string accountId)
+        [HttpGet("users/me/balance")]
+        public async Task<ActionResult<decimal>> GetUserBalance()
         {
-            var balance = await mediator.Send(new GetUserBalanceQuery(accountId));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var balance = await mediator.Send(new GetUserBalanceQuery(userId));
             return Ok(balance);
         }
 
