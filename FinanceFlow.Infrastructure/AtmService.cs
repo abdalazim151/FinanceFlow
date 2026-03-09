@@ -119,6 +119,24 @@ namespace FinanceFlow.Infrastructure
                 })
                 .ToList();
         }
+
+        public async Task<AtmDto> CreateAtmAsync(string location)
+        {
+            var atm = new AtmMachine
+            {
+                Location = location
+            };
+
+            context.AtmMachines.Add(atm);
+            await context.SaveChangesAsync();
+
+            return new AtmDto
+            {
+                Id = atm.Id,
+                Location = atm.Location,
+                TotalCash = 0
+            };
+        }
     }
 }
 

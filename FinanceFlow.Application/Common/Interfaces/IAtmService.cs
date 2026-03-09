@@ -10,6 +10,7 @@ namespace FinanceFlow.Application.Common.Interfaces
         Task<decimal> GetUserBalanceAsync(string accountId);
         Task<int> GetAtmBalanceAsync(int atmId);
         Task<IReadOnlyList<AtmDto>> GetAllAtmsAsync();
+        Task<AtmDto> CreateAtmAsync(string location);
     }
 }
 
