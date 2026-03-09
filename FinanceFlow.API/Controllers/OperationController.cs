@@ -118,5 +118,17 @@ namespace FinanceFlow.API.Controllers
             var result = await mediator.Send(new GetAllAtmQuery());
             return Ok(result);
         }
+
+        [HttpPost("atms")]
+        public async Task<ActionResult<AtmDto>> CreateAtm([FromBody] CreateAtmCommand command)
+        {
+            var createdAtm = await mediator.Send(command);
+
+            return CreatedAtAction(
+                nameof(GetAtmBalance),
+                new { atmId = createdAtm.Id },
+                createdAtm
+            );
+        }
     }
 }
