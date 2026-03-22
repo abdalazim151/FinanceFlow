@@ -8,7 +8,7 @@ namespace FinanceFlow.Application.Features.Operation.Command
     public record DepositeCommand(
         int Amount,
         string Description,
-        string AccountId,
+        string? AccountId,
         int AtmId
     ) : IRequest<bool>;
 

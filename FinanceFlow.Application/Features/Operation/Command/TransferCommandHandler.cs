@@ -6,10 +6,9 @@ using MediatR;
 namespace FinanceFlow.Application.Features.Operation.Command
 {
     public record TransferCommand(
-        string FromAccountId,
+        string? FromAccountId,
         string ToAccountId,
         int Amount,
-        int AtmId,
         string Description
     ) : IRequest<bool>;
 
@@ -28,7 +27,6 @@ namespace FinanceFlow.Application.Features.Operation.Command
                 request.FromAccountId,
                 request.ToAccountId,
                 request.Amount,
-                request.AtmId,
                 request.Description
             );
         }
