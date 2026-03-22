@@ -6,18 +6,22 @@ using FinanceFlow.Application.Common.DTOs;
 using FinanceFlow.Application.Common.Interfaces;
 using FinanceFlow.Domain.Entities;
 using FinanceFlow.Domain.Enums;
+using FinanceFlow.Domain.MessagingContract;
 using FinanceFlow.Infrastructure.Persistence;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinanceFlow.Infrastructure
+namespace FinanceFlow.Infrastructure.Serivces
 {
     public class AtmService : IAtmService
     {
         private readonly ApplicationDbContext context;
+        private readonly IPublishEndpoint publish;
 
-        public AtmService(ApplicationDbContext context)
+        public AtmService(ApplicationDbContext context,IPublishEndpoint publish)
         {
             this.context = context;
+            this.publish = publish;
         }
 
         public async Task<bool> BankFeedAsync(int atmId, int amount, string description)
@@ -56,18 +60,15 @@ namespace FinanceFlow.Infrastructure
                     remaining -= count * denom;
                 }
 
-                var transactionEntity = new Transaction
+                var transactionEntity = new TransActionContract
                 {
                     Amount = amount,
                     transactionType = TransactionType.Feed,
-                    User1Id = string.Empty,
-                    User2Id = string.Empty,
                     AtmMachineId = atm.Id,
-                    atmMachine = atm
                 };
 
-                context.Transactions.Add(transactionEntity);
                 await context.SaveChangesAsync();
+                publish.Publish(transactionEntity);
                 await transaction.CommitAsync();
 
                 return true;
@@ -86,13 +87,14 @@ namespace FinanceFlow.Infrastructure
 
         public async Task<decimal> GetUserBalanceAsync(string accountId)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == accountId);
+            var user = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == accountId);
             return user?.Balance ?? 0;
         }
 
         public async Task<int> GetAtmBalanceAsync(int atmId)
         {
             var atm = await context.AtmMachines
+                .AsNoTracking()
                 .Include(a => a.Inventories)
                 .FirstOrDefaultAsync(a => a.Id == atmId);
 
@@ -107,6 +109,7 @@ namespace FinanceFlow.Infrastructure
         public async Task<IReadOnlyList<AtmDto>> GetAllAtmsAsync()
         {
             var atms = await context.AtmMachines
+                .AsNoTracking()
                 .Include(a => a.Inventories)
                 .ToListAsync();
 
@@ -122,9 +125,22 @@ namespace FinanceFlow.Infrastructure
 
         public async Task<AtmDto> CreateAtmAsync(string location)
         {
+            var list = new List<Denomination>();
+            var d200 = new Denomination();
+            list.Add(Denomination.TwoHundred);
+            list.Add(Denomination.Hundred);
+            list.Add(Denomination.Fifty);
+            list.Add(Denomination.Twenty);
+            list.Add(Denomination.Ten);
             var atm = new AtmMachine
             {
                 Location = location
+                ,Inventories=list.Select(d => new AtmInventory
+                {
+                    Denomination = d,
+                    Count = 0
+                }).ToList()
+
             };
 
             context.AtmMachines.Add(atm);

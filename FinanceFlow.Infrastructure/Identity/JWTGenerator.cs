@@ -1,6 +1,7 @@
 ﻿using FinanceFlow.Application.Common.DTOs;
 using FinanceFlow.Application.Common.Interfaces;
 using FinanceFlow.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -12,10 +13,13 @@ namespace FinanceFlow.Infrastructure.Identity
     public class JWTGenerator : IJWTGenerator
     {
         private readonly IConfiguration configuration;
+        private readonly UserManager<ApplicationUser> userManager;
 
-        public JWTGenerator(IConfiguration configuration)
+        public JWTGenerator(IConfiguration configuration
+            ,UserManager<ApplicationUser> userManager)
         {
             this.configuration = configuration;
+            this.userManager = userManager;
         }
         public async Task<LoginResponse> CreateTokenAsync(User user)
         {
@@ -24,6 +28,16 @@ namespace FinanceFlow.Infrastructure.Identity
             {
                 new Claim(ClaimTypes.NameIdentifier,user.Id)
             };
+            var AppUser=await userManager.FindByIdAsync(user.Id);
+            if (AppUser is not null)
+            {
+                var userRoles = await userManager.GetRolesAsync(AppUser);
+                foreach (var role in userRoles)
+                {
+                    AuthClaim.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+            }
             var authKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Key"]));
             var Token = new JwtSecurityToken(
                  issuer: configuration["JWT:ValidIssuer"],

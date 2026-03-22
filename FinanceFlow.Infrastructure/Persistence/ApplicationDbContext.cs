@@ -19,7 +19,6 @@ namespace FinanceFlow.Infrastructure.Persistence
         {
         }
         public DbSet<User> Users => Set<User>();
-        public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<AtmMachine> AtmMachines => Set<AtmMachine>();
         protected override void OnModelCreating(ModelBuilder builder)
         {

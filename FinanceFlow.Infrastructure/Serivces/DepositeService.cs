@@ -1,7 +1,9 @@
 using FinanceFlow.Application.Common.Interfaces;
 using FinanceFlow.Domain.Entities;
 using FinanceFlow.Domain.Enums;
+using FinanceFlow.Domain.MessagingContract;
 using FinanceFlow.Infrastructure.Persistence;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,15 +13,17 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FinanceFlow.Infrastructure
+namespace FinanceFlow.Infrastructure.Serivces
 {
     public class DepositeService : IDepositeService
     {
         private readonly ApplicationDbContext context;
+        private readonly IPublishEndpoint publish;
 
-        public DepositeService(ApplicationDbContext context)
+        public DepositeService(ApplicationDbContext context, IPublishEndpoint publish)
         {
             this.context = context;
+            this.publish = publish;
         }
         public async Task<bool> Deposite(int amount, string AccountId, int AtmId, string disc = "string disc")
         {
@@ -45,19 +49,18 @@ namespace FinanceFlow.Infrastructure
                 });
                 user.Balance += amount;
 
-                var transactionEntity = new Transaction
+                var transactionEntity = new TransActionContract
                 {
                     Amount = amount,
                     transactionType = TransactionType.Deposit,
                     User1Id = user.Id,
-                    User2Id = string.Empty,
+                    User2Id = null,
                     AtmMachineId = atm.Id,
-                    atmMachine = atm
                 };
 
-                context.Transactions.Add(transactionEntity);
                 context.SaveChanges();
-                await transaction.CommitAsync(); // commiting transaction
+                publish.Publish(transactionEntity); 
+                await transaction.CommitAsync(); 
             }
             catch (DbUpdateConcurrencyException ex)
             {

@@ -1,7 +1,10 @@
 using FinanceFlow.Application.Common.Interfaces;
 using FinanceFlow.Domain.Entities;
 using FinanceFlow.Domain.Enums;
+using FinanceFlow.Domain.MessagingContract;
 using FinanceFlow.Infrastructure.Persistence;
+using MassTransit;
+using MassTransit.Testing;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,15 +12,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FinanceFlow.Infrastructure
+namespace FinanceFlow.Infrastructure.Serivces
 {
     public class WithdrawService : IWithdrawService
     {
         private readonly ApplicationDbContext context;
+        private readonly IPublishEndpoint publish;
 
-        public WithdrawService(ApplicationDbContext context)
+        public WithdrawService(ApplicationDbContext context,IPublishEndpoint publish)
         { 
             this.context = context;
+            this.publish = publish;
         }
         public async Task<bool> CheckValidAmount(int amount, string AccountId, int AtmId)
         {
@@ -84,7 +89,7 @@ namespace FinanceFlow.Infrastructure
 
                         // خصم من مخزون الماكينة
                         inventory.Count -= actualTaken;
-                        remainingToWithdraw -= (actualTaken * billValue);
+                        remainingToWithdraw -= actualTaken * billValue;
                     }
                 }
 
@@ -95,19 +100,19 @@ namespace FinanceFlow.Infrastructure
                 }
                 user.Balance -= amount;
 
-                var transactionEntity = new Transaction
+                var transactionEntity = new TransActionContract
                 {
                     Amount = amount,
-                    transactionType = TransactionType.Withdrawal,
+                    transactionType = TransactionType.Withdraw,
                     User1Id = user.Id,
-                    User2Id = string.Empty,
+                    User2Id = null,
                     AtmMachineId = atm.Id,
-                    atmMachine = atm
                 };
-
-                context.Transactions.Add(transactionEntity);
                 await context.SaveChangesAsync();
+                publish.Publish(transactionEntity);
                 await transaction.CommitAsync();
+
+
 
                 return true;
             }

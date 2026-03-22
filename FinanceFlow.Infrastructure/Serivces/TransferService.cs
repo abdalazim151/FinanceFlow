@@ -3,21 +3,26 @@ using System.Threading.Tasks;
 using FinanceFlow.Application.Common.Interfaces;
 using FinanceFlow.Domain.Entities;
 using FinanceFlow.Domain.Enums;
+using FinanceFlow.Domain.MessagingContract;
 using FinanceFlow.Infrastructure.Persistence;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinanceFlow.Infrastructure
+namespace FinanceFlow.Infrastructure.Serivces
 {
     public class TransferService : ITransferService
     {
         private readonly ApplicationDbContext context;
+        private readonly IPublishEndpoint publish;
 
-        public TransferService(ApplicationDbContext context)
+        public TransferService(ApplicationDbContext context
+            ,IPublishEndpoint publish)
         {
             this.context = context;
+            this.publish = publish;
         }
 
-        public async Task<bool> TransferAsync(string fromAccountId, string toAccountId, int amount, int atmId, string description)
+        public async Task<bool> TransferAsync(string fromAccountId, string toAccountId, int amount, string description)
         {
             if (amount <= 0)
             {
@@ -29,9 +34,8 @@ namespace FinanceFlow.Infrastructure
             {
                 var fromUser = await context.Users.FirstOrDefaultAsync(u => u.Id == fromAccountId);
                 var toUser = await context.Users.FirstOrDefaultAsync(u => u.Id == toAccountId);
-                var atm = await context.AtmMachines.FirstOrDefaultAsync(a => a.Id == atmId);
 
-                if (fromUser is null || toUser is null || atm is null)
+                if (fromUser is null || toUser is null )
                 {
                     return false;
                 }
@@ -44,20 +48,19 @@ namespace FinanceFlow.Infrastructure
                 fromUser.Balance -= amount;
                 toUser.Balance += amount;
 
-                var transactionEntity = new Transaction
+                var transactionEntity = new TransActionContract
                 {
                     Amount = amount,
                     transactionType = TransactionType.Transfer,
                     User1Id = fromUser.Id,
                     User2Id = toUser.Id,
-                    AtmMachineId = atm.Id,
-                    atmMachine = atm
+                    CreatedAt = DateTime.UtcNow,
                 };
 
-                context.Transactions.Add(transactionEntity);
                 await context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                publish.Publish(transactionEntity);
 
+                await transaction.CommitAsync();
                 return true;
             }
             catch (DbUpdateConcurrencyException)

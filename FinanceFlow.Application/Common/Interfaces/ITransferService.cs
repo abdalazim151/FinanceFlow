@@ -4,7 +4,7 @@ namespace FinanceFlow.Application.Common.Interfaces
 {
     public interface ITransferService
     {
-        Task<bool> TransferAsync(string fromAccountId, string toAccountId, int amount, int atmId, string description);
+        Task<bool> TransferAsync(string fromAccountId, string toAccountId, int amount ,string description);
     }
 }
 
