@@ -1,21 +1,18 @@
-
-using FinanceFlow.Application;
-using FinanceFlow.Application.Common.Interfaces;
+﻿
+using FinanceFlow.API.Middlewares;
 using FinanceFlow.Application.Features.Authentication.Commands;
 using FinanceFlow.Infrastructure;
 using FinanceFlow.Infrastructure.Identity;
 using FinanceFlow.Infrastructure.Persistence;
-using FinanceFlow.API.Middlewares;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using FinanceFlow.Application.Common.Behaviours;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace FinanceFlow.API
 {
@@ -25,30 +22,65 @@ namespace FinanceFlow.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
 
             builder.Services.AddControllers()
                 .AddFluentValidation();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddDbContext<ApplicationDbContext>(
-                options =>
-                {
-                    var connection = builder.Configuration.GetConnectionString("Local");
-                    options.UseSqlServer(connection);
-                });
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole<string>>()
+            #region dataBase
+            try
+            {
+                builder.Services.AddDbContext<ApplicationDbContext>(
+                    options =>
+                    {
+                        var connection = builder.Configuration.GetConnectionString("Local");
+                        options.UseSqlServer(connection);
+                    });
+                builder.Services.AddIdentity<ApplicationUser, IdentityRole>() // شلنا الـ <string> لأن IdentityRole هي أصلاً string باي ديفولت
                 .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddRoles<IdentityRole>()
                 .AddDefaultTokenProviders();
+                var mongoSettings = builder.Configuration.GetSection("MongoDB");
 
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IJWTGenerator, JWTGenerator>();
-            builder.Services.AddScoped<IDepositeService, DepositeService>();
-            builder.Services.AddScoped<IWithdrawService, WithdrawService>();
-            builder.Services.AddScoped<ITransferService, TransferService>();
-            builder.Services.AddScoped<IAtmService, AtmService>();
+                builder.Services.AddSingleton<IMongoClient>(sp =>
+                {
+                    return new MongoClient(mongoSettings["ConnectionString"]);
+                });
 
+                builder.Services.AddScoped(sp =>
+                {
+                    var client = sp.GetRequiredService<IMongoClient>();
+                    return client.GetDatabase(mongoSettings["DatabaseName"]);
+                });
+            }catch(Exception ex)
+            {
+                   Console.WriteLine(ex.Message);
+            }
+            
+            #endregion
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                // 2. استخدام التوزيع (Partitioning) بناءً على الـ IP أو المستخدم
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                {
+                    // تمييز كل مستخدم عن التاني (بناءً على الـ IP أو الـ Identity لو مسجل دخول)
+                    var key = httpContext.User.Identity?.Name
+                              ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                              ?? "unknown";
+
+                    return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5 ,                   // 5 طلبات
+                        Window = TimeSpan.FromSeconds(10),    // كل 10 ثواني
+                        QueueLimit = 5,                       // طابور بحد أقصى 5 
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                    });
+                });
+            });
+
+            builder.Services.AddInfrastructureServices();
             var jwtSettings = builder.Configuration.GetSection("JWT");
             var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
@@ -70,14 +102,15 @@ namespace FinanceFlow.API
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
             });
-            builder.Services.AddMediatR(cfg =>
-            {
-                cfg.RegisterServicesFromAssembly(typeof(LoginCommand).Assembly);
-                cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            });
+            object value = builder.Services.AddValidatorsFromAssemblyContaining<LoginCommandValidator>();
 
-            builder.Services.AddValidatorsFromAssemblyContaining<LoginCommandValidator>();
             var app = builder.Build();
+            using var ScopedServices = app.Services.CreateScope();// create instance of scoped services
+
+            var Services = ScopedServices.ServiceProvider; // get all scoped services
+
+            var roleManager = Services.GetRequiredService<RoleManager<IdentityRole>>();
+                await RoleSeeding.SeedRolesAsync(roleManager);
             var scope = app.Services.CreateScope();
             var services = scope.ServiceProvider;
 
@@ -93,7 +126,7 @@ namespace FinanceFlow.API
                 var logger = loggerfactory.CreateLogger<Program>();
                 logger.LogError(ex, "an error occured during applying db");
             }
-
+            #region Middleware
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             if (app.Environment.IsDevelopment())
@@ -103,8 +136,16 @@ namespace FinanceFlow.API
             }
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseRateLimiter();
             app.MapControllers();
+            #endregion
             app.Run();
         }
     }
 }
+/*
+ * message queue
+one for saving transaction,
+one for sending notifications,
+one for generating reports,
+ */
