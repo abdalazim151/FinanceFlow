@@ -68,8 +68,8 @@ namespace FinanceFlow.Infrastructure.Serivces
                 };
 
                 await context.SaveChangesAsync();
-                publish.Publish(transactionEntity);
                 await transaction.CommitAsync();
+                publish.Publish(transactionEntity);
 
                 return true;
             }

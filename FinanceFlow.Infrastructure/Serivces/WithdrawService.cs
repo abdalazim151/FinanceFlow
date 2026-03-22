@@ -82,12 +82,10 @@ namespace FinanceFlow.Infrastructure.Serivces
                     int billValue = (int)inventory.Denomination;
                     int neededCount = remainingToWithdraw / billValue;
 
-                    // إذا كنا نحتاج هذه الفئة وهي متوفرة في الماكينة
                     if (neededCount > 0 && inventory.Count > 0)
                     {
                         int actualTaken = Math.Min(neededCount, inventory.Count);
 
-                        // خصم من مخزون الماكينة
                         inventory.Count -= actualTaken;
                         remainingToWithdraw -= actualTaken * billValue;
                     }
@@ -109,11 +107,8 @@ namespace FinanceFlow.Infrastructure.Serivces
                     AtmMachineId = atm.Id,
                 };
                 await context.SaveChangesAsync();
-                publish.Publish(transactionEntity);
                 await transaction.CommitAsync();
-
-
-
+                publish.Publish(transactionEntity);
                 return true;
             }
             catch (DbUpdateConcurrencyException)

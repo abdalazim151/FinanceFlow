@@ -59,8 +59,8 @@ namespace FinanceFlow.Infrastructure.Serivces
                 };
 
                 context.SaveChanges();
-                publish.Publish(transactionEntity); 
                 await transaction.CommitAsync(); 
+                publish.Publish(transactionEntity); 
             }
             catch (DbUpdateConcurrencyException ex)
             {
