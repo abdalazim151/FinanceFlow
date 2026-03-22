@@ -10,7 +10,6 @@ namespace FinanceFlow.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class OperationController : ControllerBase
     {
         private readonly IMediator mediator;
@@ -21,6 +20,8 @@ namespace FinanceFlow.API.Controllers
         }
 
         [HttpPost("deposit")]
+        [Authorize]
+
         public async Task<IActionResult> Deposite([FromBody] DepositeCommand command)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,6 +40,8 @@ namespace FinanceFlow.API.Controllers
 
             return Ok(true);
         }
+
+        [Authorize]
 
         [HttpPost("withdraw")]
         public async Task<IActionResult> Withdraw([FromBody] WithdrawCommand command)
@@ -59,6 +62,7 @@ namespace FinanceFlow.API.Controllers
 
             return Ok(true);
         }
+        [Authorize]
 
         [HttpPost("transfer")]
         public async Task<IActionResult> Transfer([FromBody] TransferCommand command)
@@ -79,6 +83,7 @@ namespace FinanceFlow.API.Controllers
 
             return Ok(true);
         }
+        [Authorize]
 
         [HttpPost("bank-feed")]
         public async Task<IActionResult> BankFeed([FromBody] BankFeedCommand command)
@@ -93,6 +98,8 @@ namespace FinanceFlow.API.Controllers
         }
 
         [HttpGet("users/me/balance")]
+        [Authorize]
+
         public async Task<ActionResult<decimal>> GetUserBalance()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -106,6 +113,8 @@ namespace FinanceFlow.API.Controllers
         }
 
         [HttpGet("atms/{atmId}/balance")]
+        [Authorize]
+
         public async Task<ActionResult<int>> GetAtmBalance(int atmId)
         {
             var balance = await mediator.Send(new GetAtmBalanceQuery(atmId));
@@ -113,13 +122,16 @@ namespace FinanceFlow.API.Controllers
         }
 
         [HttpGet("atms")]
+
         public async Task<ActionResult<IReadOnlyList<AtmDto>>> GetAllAtm()
         {
             var result = await mediator.Send(new GetAllAtmQuery());
             return Ok(result);
         }
 
-        [HttpPost("atms")]
+        [HttpPost("CreateAtm")]
+
+
         public async Task<ActionResult<AtmDto>> CreateAtm([FromBody] CreateAtmCommand command)
         {
             var createdAtm = await mediator.Send(command);
